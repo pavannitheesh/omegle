@@ -1,0 +1,16 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "backend for omgle",
+  "main": "index.ts",
+  "scripts": {
+    "build": "npx tsc -b"
+  },
+  "author": "pavannitheesh",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1",
+    "typescript": "^5.8.3"
+  }
+}
