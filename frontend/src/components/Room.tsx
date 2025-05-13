@@ -1,9 +1,14 @@
-const room = () => {
+import { useSearchParams } from "react-router-dom";
+
+const Room = () => {
+      const [searchParams] = useSearchParams();
+ 
+  const search = searchParams.get('name');
     return ( 
         <div>
-            Room
+            hi : {search}
         </div>
      );
 }
  
-export default room;
+export default Room;
