@@ -5,7 +5,7 @@ export interface user{
     socket:Socket,
     name:string
 }
-class UserManager{
+export class UserManager{
     private users:user[];
     private queue:string[];
     private roomManager:RoomManager;
@@ -21,6 +21,7 @@ class UserManager{
             socket
         });
         this.queue.push(socket.id);
+        socket.send("lobby");
         this.clearQueue();
         this.initHandlers(socket);
         
@@ -33,20 +34,25 @@ class UserManager{
         if(this.queue.length<2){
             return ;
         }
-        const user1=this.users.find(x => x.socket.id===this.queue.pop());
-        const user2=this.users.find(x => x.socket.id===this.queue.pop());
+         const id1 = this.queue.pop();
+        const id2 = this.queue.pop();
+        console.log("id is " + id1 + " " + id2);
+        const user1 = this.users.find(x => x.socket.id === id1);
+        const user2 = this.users.find(x => x.socket.id === id2);
         if(!user1 || !user2) {
             return ;
         }
+        console.log(user1);
+        console.log(user2);
         const room=this.roomManager.createRoom(user1,user2);
     
     }
     initHandlers(socket: Socket) {
         socket.on("offer", ({sdp, roomId}: {sdp: string, roomId: string}) => {
-            this.roomManager.onOffer(roomId, sdp);
+            this.roomManager.onOffer(roomId, sdp, socket.id);
         })
         socket.on("answer",({sdp, roomId}: {sdp: string, roomId: string}) => {
-            this.roomManager.onAnswer(roomId, sdp);
+            this.roomManager.onAnswer(roomId, sdp, socket.id);
         })
     }
 }
