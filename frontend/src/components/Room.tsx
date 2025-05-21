@@ -1,31 +1,56 @@
-import  { useEffect, useState } from "react";
+import  { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-  import { io } from "socket.io-client";
-  const URL= 'http://localhost:3000'
+  import { io, Socket } from "socket.io-client";
+  const URL= 'http://localhost:3000';
 const Room = () => {
+
+
       const [searchParams] = useSearchParams();
       const [lobby,setLobby] = useState(false);
+      const [socket,setSocket] = useState<null | Socket>(null);
+      const [remoteVideoStream,setRemoteVideoStream] = useState< MediaStreamTrack | null>(null);
+      const [remoteAudioStream,setRemoteAudioStream] = useState< MediaStreamTrack | null>(null);
+      const [sendingPc,setSendingPc] = useState<null | RTCPeerConnection>(null);
+      const [receivingPc,setReceivingPc] = useState<null | RTCPeerConnection>(null);
+    
       const search = searchParams.get('name');
       useEffect(() => {
         const socket = io(URL);
-        socket.on("send-offer",({roomId})=>{
+        socket.on("send-offer",async ({roomId})=>{
             setLobby(false);
-            alert("send offer recieved");
+           const pc=new RTCPeerConnection();
+           setSendingPc(pc);
+           const sdp = await pc.createOffer();
+
+
             socket.emit("offer",{
-                    sdp:"",
+                    sdp,
                     roomId
             })
         });
-        socket.on("offer",({roomId,offer})=>{
-            alert("offer recieved");
+        socket.on("offer",async ({roomId,offer})=>{
+            const pc=new RTCPeerConnection();
+          pc.setRemoteDescription({sdp:offer, type:"offer"});
+            const sdp = await pc.createAnswer();
+            setReceivingPc(pc);
+            pc.ontrack = (({track,type}) => {
+              if(type === "video"){
+                setRemoteVideoStream(track);
+              }else{
+                  setRemoteAudioStream(track);
+              }});
+
+
             socket.emit("answer",{
-                sdp:"",
+                sdp,
                 roomId
             })
 
         })
         socket.on("answer",({roomId,answer})=>{
-            alert("answer recieved");
+            const pc = new RTCPeerConnection();
+            pc.setRemoteDescription({sdp:answer, type:"answer"});
+           
             setLobby(false);
         })
          socket.on("lobby", () => {
@@ -44,8 +69,8 @@ const Room = () => {
     return ( 
         <div>
             hi : {search}
-            <video width={400 } height={400}/>
-            <video width={400 } height={400}/>
+            <video autoPlay width={400 } height={400}/>
+            <video autoPlay width={400 } height={400}/>
         </div>
      );
 }
